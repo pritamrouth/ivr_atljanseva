@@ -24,7 +24,7 @@ func main() {
 	citizenRepo := repository.NewCitizenRepository(database)
 	politicalRepo := repository.NewPoliticalUserRepository(database)
 
-	citizenHandler := handler.NewCitizenHandler(citizenRepo)
+	citizenHandler := handler.NewCitizenHandler(citizenRepo, politicalRepo)
 	wardHandler := handler.NewWardHandler(politicalRepo, citizenRepo)
 	nagarsevakHandler := handler.NewNagarsevakHandler(politicalRepo, citizenRepo)
 

@@ -27,5 +27,9 @@ func RegisterRoutes(
 			"/nagarsevak",
 			nagarsevakHandler.FindNagarsevak,
 		)
+		ivr.POST(
+			"/citizen/complete",
+			nagarsevakHandler.CompleteCitizen,
+		)
 	}
 }

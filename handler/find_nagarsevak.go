@@ -96,3 +96,44 @@ func (h *NagarsevakHandler) FindNagarsevak(c *gin.Context) {
 		})
 	}
 }
+
+func (h *NagarsevakHandler) CompleteCitizen(c *gin.Context) {
+	var req models.RegisterCitizenRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ns, err := h.politicalRepo.FindNagarsevakByID(
+		c.Request.Context(),
+		req.NagarsevakID,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if ns == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "nagarsevak not found"})
+		return
+	}
+
+	err = h.citizenRepo.UpsertCitizen(
+		c.Request.Context(),
+		req.PhoneNumber,
+		req.Language,
+		req.Pincode,
+		req.Ward,
+		ns.ID,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":        true,
+		"saved":          true,
+		"nagarsevak_name": ns.Name,
+	})
+}

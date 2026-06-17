@@ -1,25 +1,28 @@
 package handler
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+
 	"ivr_ataljanseva/db/repository"
 	"ivr_ataljanseva/models"
-
-	
 )
 
 type CitizenHandler struct {
-	repo *repository.CitizenRepository
+	repo         *repository.CitizenRepository
+	politicalRepo *repository.PoliticalUserRepository
 }
 
 func NewCitizenHandler(
 	repo *repository.CitizenRepository,
+	politicalRepo *repository.PoliticalUserRepository,
 ) *CitizenHandler {
 	return &CitizenHandler{
-		repo: repo,
+		repo:         repo,
+		politicalRepo: politicalRepo,
 	}
 }
 
@@ -44,9 +47,25 @@ func (h *CitizenHandler) GetCitizen(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.CitizenLookupResponse{
-		Found:      true,
-		CitizenIVR: *citizen,
+	nagarsevakName := ""
+
+	if citizen.NagarsevakID != uuid.Nil {
+		ns, err := h.politicalRepo.FindNagarsevakByID(
+			c.Request.Context(),
+			citizen.NagarsevakID,
+		)
+		if err == nil && ns != nil {
+			nagarsevakName = ns.Name
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"found":           true,
+		"language":        citizen.Language,
+		"pincode":         citizen.Pincode,
+		"ward":            citizen.Ward,
+		"nagarsevak_id":   citizen.NagarsevakID.String(),
+		"nagarsevak_name": nagarsevakName,
 	})
 }
 

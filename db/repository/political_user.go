@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/google/uuid"
+
 	"ivr_ataljanseva/models"
 )
 
@@ -102,4 +104,32 @@ func (r *PoliticalUserRepository) FindNagarsevaks(
 	}
 
 	return records, nil
+}
+
+func (r *PoliticalUserRepository) FindNagarsevakByID(
+	ctx context.Context,
+	id uuid.UUID,
+) (*models.NagarsevakRecord, error) {
+
+	query := `
+	SELECT
+		id,
+		full_name
+	FROM political_users
+	WHERE id = $1
+	  AND is_active = true
+	LIMIT 1
+	`
+
+	var rec models.NagarsevakRecord
+
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&rec.ID, &rec.Name)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &rec, nil
 }
