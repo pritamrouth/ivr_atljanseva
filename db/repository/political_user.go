@@ -67,3 +67,39 @@ func (r *PoliticalUserRepository) FindMatchingWards(
 
 	return matches, nil
 }
+
+func (r *PoliticalUserRepository) FindNagarsevaks(
+	ctx context.Context,
+	pincode string,
+	ward string,
+) ([]models.NagarsevakRecord, error) {
+
+	query := `
+	SELECT
+		id,
+		full_name
+	FROM political_users
+	WHERE pincode::text = $1
+	  AND ward = $2
+	  AND is_active = true
+	ORDER BY full_name
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, pincode, ward)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []models.NagarsevakRecord
+
+	for rows.Next() {
+		var rec models.NagarsevakRecord
+		if err := rows.Scan(&rec.ID, &rec.Name); err != nil {
+			return nil, err
+		}
+		records = append(records, rec)
+	}
+
+	return records, nil
+}

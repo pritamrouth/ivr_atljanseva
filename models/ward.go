@@ -23,3 +23,27 @@ type WardMatch struct {
 	NagarsevakID   uuid.UUID
 	NagarsevakName string
 }
+
+type NagarsevakResponse struct {
+    Status    string             `json:"status"`
+    AutoSaved bool               `json:"auto_saved,omitempty"`
+    Nagarsevak *NagarsevakItem   `json:"nagarsevak,omitempty"`
+    List      []NagarsevakItem   `json:"list,omitempty"`
+}
+
+type NagarsevakItem struct {
+    ID   string `json:"id"`
+    Name string `json:"name"`
+}
+
+type NagarsevakLookupRequest struct {
+	PhoneNumber string `json:"phone_number"`
+	Language    string `json:"language"`
+	Pincode     string `json:"pincode"`
+	Ward        string `json:"ward"`
+}
+
+type NagarsevakRecord struct {
+	ID   uuid.UUID
+	Name string
+}

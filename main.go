@@ -26,11 +26,13 @@ func main() {
 
 	citizenHandler := handler.NewCitizenHandler(citizenRepo)
 	wardHandler := handler.NewWardHandler(politicalRepo, citizenRepo)
+	nagarsevakHandler := handler.NewNagarsevakHandler(politicalRepo, citizenRepo)
 
 	routes.RegisterRoutes(
 		router,
 		citizenHandler,
 		wardHandler,
+		nagarsevakHandler,
 	)
 
 	log.Println("server running on :8080")

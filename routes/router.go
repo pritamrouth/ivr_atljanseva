@@ -10,6 +10,7 @@ func RegisterRoutes(
 	router *gin.Engine,
 	citizenHandler *handler.CitizenHandler,
 	wardHandler *handler.WardHandler,
+	nagarsevakHandler *handler.NagarsevakHandler,
 ) {
 	ivr := router.Group("/ivr")
 	{
@@ -21,6 +22,10 @@ func RegisterRoutes(
 		ivr.POST(
 			"/register/resolve",
 			wardHandler.ResolveWard,
+		)
+		ivr.POST(
+			"/nagarsevak",
+			nagarsevakHandler.FindNagarsevak,
 		)
 	}
 }
