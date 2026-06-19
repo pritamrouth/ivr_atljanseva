@@ -120,13 +120,13 @@ func (h *PlivoHandler) Incoming(c *gin.Context) {
 	url := h.playURL("welcome", "english")
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Play(url),
-			plivo.GetDigits(action, 1, 10),
+			plivo.GetInput(action, 1, "", plivo.Play(url)),
+			plivo.NoInput("english"),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("Welcome to Atal Janseva Citizen Service. Marathi saaathi 1 daba. For English, press 2. Hindi ke liye 3 dabaie.", "english"),
-			plivo.GetDigits(action, 1, 10),
+			plivo.GetInput(action, 1, "", plivo.Speak("Welcome to Atal Janseva Citizen Service. Marathi saaathi 1 daba. For English, press 2. Hindi ke liye 3 dabaie.", "english")),
+			plivo.NoInput("english"),
 		))
 	}
 }
@@ -145,11 +145,13 @@ func (h *PlivoHandler) LanguageSelect(c *gin.Context) {
 	url := h.playURL("ward_input", lang)
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 6, 15, plivo.Play(url)),
+			plivo.GetInput(action, 6, "", plivo.Play(url)),
+			plivo.NoInput(lang),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 6, 15, plivo.Speak("Please enter your 6 digit pincode.", lang)),
+			plivo.GetInput(action, 6, "", plivo.Speak("Please enter your 6 digit pincode.", lang)),
+			plivo.NoInput(lang),
 		))
 	}
 }
@@ -165,7 +167,8 @@ func (h *PlivoHandler) PincodeInput(c *gin.Context) {
 	if digits == "" || len(digits) < 6 {
 		action := h.baseURL + "/ivr/plivo/pincode-input?phone=" + phone + "&language=" + lang
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 6, 15, plivo.Speak("Invalid pincode. Please enter your 6 digit pincode.", lang)),
+			plivo.GetInput(action, 6, "", plivo.Speak("Invalid pincode. Please enter your 6 digit pincode.", lang)),
+			plivo.NoInput(lang),
 		))
 		return
 	}
@@ -175,7 +178,8 @@ func (h *PlivoHandler) PincodeInput(c *gin.Context) {
 	action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang + "&pincode=" + pincode
 
 	c.String(http.StatusOK, plivo.Response(
-		plivo.GetDigits(action, 10, 15, plivo.Speak("Now enter your ward number and press hash.", lang)),
+		plivo.GetInput(action, 10, "#", plivo.Speak("Now enter your ward number and press hash.", lang)),
+		plivo.NoInput(lang),
 	))
 }
 
@@ -265,8 +269,8 @@ func (h *PlivoHandler) WardSelect(c *gin.Context) {
 	if idx < 0 || idx >= len(wards) {
 		action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang + "&pincode=" + pincode + "&retry="
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("Invalid selection. Please try again.", lang),
-			plivo.GetDigits(action, 10, 15),
+			plivo.GetInput(action, 10, "#", plivo.Speak("Invalid selection. Please try again.", lang)),
+			plivo.NoInput(lang),
 		))
 		return
 	}
@@ -321,8 +325,8 @@ func (h *PlivoHandler) NagarsevakSelect(c *gin.Context) {
 	if idx < 0 || idx >= len(ids) {
 		action := h.baseURL + "/ivr/plivo/ward-select?phone=" + phone + "&language=" + lang + "&pincode=" + pincode + "&wards=" + ward
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("Invalid selection. Please try again.", lang),
-			plivo.GetDigits(action, 1, 10),
+			plivo.GetInput(action, 1, "", plivo.Speak("Invalid selection. Please try again.", lang)),
+			plivo.NoInput(lang),
 		))
 		return
 	}
@@ -485,7 +489,8 @@ func (h *PlivoHandler) returnMainMenu(c *gin.Context, phone, lang, pincode, ward
 		"&nagarsevak_phone=" + nsPhone
 
 	c.String(http.StatusOK, plivo.Response(
-		plivo.GetDigits(action, 1, 10, plivo.Speak("Welcome back! Your corporator "+nsName+" is connected. Press 1 for SOS, Press 2 to file a complaint, Press 3 to connect to your corporator.", lang)),
+		plivo.GetInput(action, 1, "", plivo.Speak("Welcome back! Your corporator "+nsName+" is connected. Press 1 for SOS, Press 2 to file a complaint, Press 3 to connect to your corporator.", lang)),
+		plivo.NoInput(lang),
 	))
 }
 
@@ -498,11 +503,13 @@ func (h *PlivoHandler) returnSOSMenu(c *gin.Context, phone, lang, pincode, ward,
 	url := h.playURL("sos_menu", lang)
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 1, 10, plivo.Play(url)),
+			plivo.GetInput(action, 1, "", plivo.Play(url)),
+			plivo.NoInput(lang),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 1, 10, plivo.Speak("Emergency SOS. Press 1 for Fire Emergency. Press 2 for Medical or Accident Emergency. Press 3 to connect with your Corporator. Press 0 to repeat.", lang)),
+			plivo.GetInput(action, 1, "", plivo.Speak("Emergency SOS. Press 1 for Fire Emergency. Press 2 for Medical or Accident Emergency. Press 3 to connect with your Corporator. Press 0 to repeat.", lang)),
+			plivo.NoInput(lang),
 		))
 	}
 }
@@ -568,11 +575,13 @@ func (h *PlivoHandler) wardInputRetry(c *gin.Context, phone, lang, pincode, retr
 	url := h.playURL("ward_input", lang)
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 10, 15, plivo.Play(url)),
+			plivo.GetInput(action, 10, "#", plivo.Play(url)),
+			plivo.NoInput(lang),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 10, 15, plivo.Speak("We could not find a matching ward. Please try again. Enter your ward number.", lang)),
+			plivo.GetInput(action, 10, "#", plivo.Speak("We could not find a matching ward. Please try again. Enter your ward number.", lang)),
+			plivo.NoInput(lang),
 		))
 	}
 }
@@ -589,8 +598,8 @@ func (h *PlivoHandler) returnWardMenu(c *gin.Context, phone, lang, pincode strin
 		"&pincode=" + pincode + "&wards=" + strings.Join(wards, ",")
 
 	c.String(http.StatusOK, plivo.Response(
-		plivo.Speak("Multiple wards found. "+strings.Join(ttsParts, ". ")+".", lang),
-		plivo.GetDigits(action, 1, 10),
+		plivo.GetInput(action, 1, "", plivo.Speak("Multiple wards found. "+strings.Join(ttsParts, ". ")+".", lang)),
+		plivo.NoInput(lang),
 	))
 }
 
@@ -606,8 +615,8 @@ func (h *PlivoHandler) returnNagarsevakMenu(c *gin.Context, phone, lang, pincode
 		"&pincode=" + pincode + "&ward=" + ward + "&ids=" + strings.Join(ids, ",")
 
 	c.String(http.StatusOK, plivo.Response(
-		plivo.Speak("Multiple corporators found. "+strings.Join(ttsParts, ". ")+".", lang),
-		plivo.GetDigits(action, 1, 10),
+		plivo.GetInput(action, 1, "", plivo.Speak("Multiple corporators found. "+strings.Join(ttsParts, ". ")+".", lang)),
+		plivo.NoInput(lang),
 	))
 }
 
