@@ -1,0 +1,158 @@
+﻿AtalJanseva AI IVR Flow English(Optimized)
+Step 1 – Welcome & Language Selection
+Welcome to AtalJanseva Citizen Service.
+मराठीसाठी 1 दाबा.
+For English, press 2.
+हिंदी के लिए 3 दबाइए.
+Step 2 – User Identification
+
+For first-time registration, enter your 6-digit PIN Code, press #, and then enter your Ward Number. 
+If you do not know your Ward Number, send a Hi message on this WhatsApp number to select your Corporator and continue. 
+
+Returning users may skip this step automatically.
+
+Step 3 – Emergency Services
+For Emergency SOS Assistance:
+Press 1 for Fire Emergency. Your call will be connected to the Fire Emergency Team.
+Press 2 for Medical or Accident Emergency. Your call will be connected to the Medical Emergency Team.
+Press 3 to connect with your Corporator (If there is only one corporator, connect directly with your Corporator.)
+
+
+Step 4 – Select and connect with Your Corporator  (If more than one corporator)
+Please select your Corporator to connect directly. 
+Press 1 for {Corporator Name}-  connect directly with your Corporator.
+Press 2 for {Corporator Name}-  connect directly with your Corporator.
+Press 3 for {Corporator Name}-  connect directly with your Corporator.
+Press 4 for {Corporator Name}-  connect directly with your Corporator.
+Press 5 for {Corporator Name}-  connect directly with your Corporator.
+To repeat this menu, press 0.
+
+
+If the call cannot be connected:
+"The office is currently unavailable. Your complaint will be recorded."
+To register a complaint, press 9.
+Step 5 – Record Complaint
+After the beep, describe your complaint and mention the address or nearby landmark where assistance is required.
+Example:
+"There is a water leakage near ABC School on MG Road."
+Step 8 – Complaint Confirmation
+Your complaint has been successfully registered. Our team will process your request shortly.
+Thank you!
+
+
+
+
+AtalJanseva AI IVR प्रवाह (मराठी)
+पायरी १ – स्वागत व भाषा निवड 
+Welcome to AtalJanseva Citizen Service.
+मराठीसाठी १ दाबा.
+For English, press 2.
+हिंदी के लिए 3 दबाइए.
+
+
+पायरी २ – वापरकर्ता ओळख
+प्रथमच नोंदणी करत असल्यास, कृपया आपला ६ अंकी पिन कोड टाका, त्यानंतर # दाबा आणि वॉर्ड क्रमांक प्रविष्ट करा.
+आपल्याला वॉर्ड क्रमांक माहित नसल्यास, या व्हॉट्सअॅप क्रमांकावर Hi संदेश पाठवून आपले नगरसेवक निवडा आणि पुढील प्रक्रिया पूर्ण करा.
+नोंदणीकृत वापरकर्त्यांसाठी ही प्रक्रिया आपोआप वगळली जाईल.
+
+
+पायरी ३ – आपत्कालीन सेवा
+आपत्कालीन SOS सेवेसाठी:
+अग्नितांडवाच्या आपत्कालीन मदतीसाठी १ दाबा. आपला कॉल अग्निशमन विभागाशी जोडला जाईल.
+वैद्यकीय किंवा अपघाताच्या आपत्कालीन मदतीसाठी २ दाबा. आपला कॉल वैद्यकीय आपत्कालीन सेवेशी जोडला जाईल.
+आपल्या नगरसेवकाशी संपर्क साधण्यासाठी ३ दाबा. (जर फक्त एकच नगरसेवक उपलब्ध असेल, तर आपला कॉल थेट त्यांच्याशी जोडला जाईल.)
+
+
+पायरी ४ – नगरसेवक निवडा व संपर्क साधा
+(एकापेक्षा अधिक नगरसेवक असल्यास) 
+कृपया थेट संपर्कासाठी आपल्या नगरसेवकाची निवड करा.
+नगरसेवक {नाव} यांच्यासाठी १ दाबा.
+नगरसेवक {नाव} यांच्यासाठी २ दाबा.
+नगरसेवक {नाव} यांच्यासाठी ३ दाबा.
+नगरसेवक {नाव} यांच्यासाठी ४ दाबा.
+नगरसेवक {नाव} यांच्यासाठी ५ दाबा. 
+हा मेनू पुन्हा ऐकण्यासाठी 0 दाबा.
+जर कॉल जोडला जाऊ शकला नाही तर:
+"कार्यालय सध्या उपलब्ध नाही. आपली तक्रार नोंदवली जाईल."
+तक्रार नोंदवण्यासाठी ९ दाबा.
+
+पायरी ५ – तक्रार नोंदवा
+बीपनंतर, कृपया आपल्या तक्रारीचे थोडक्यात वर्णन करा आणि मदत आवश्यक असलेल्या ठिकाणाचा संपूर्ण पत्ता किंवा जवळची ओळखण्याजोगी खूण सांगा.
+उदाहरण:
+"एम. जी. रोडवरील एबीसी शाळेजवळ पाण्याची गळती सुरू आहे."
+
+
+पायरी ६ – तक्रार पुष्टी
+आपली तक्रार यशस्वीरित्या नोंदविण्यात आली आहे. आमची टीम लवकरच आपल्या विनंतीवर कार्यवाही करेल.
+धन्यवाद.
+
+
+
+AtalJanseva AI IVR प्रवाह (हिंदी)
+चरण 1 – स्वागत एवं भाषा चयन
+Welcome to AtalJanseva Citizen Service.
+मराठीसाठी 1 दाबा.
+For English, press 2.
+हिंदी के लिए 3 दबाइए.
+
+
+
+
+चरण 2 – उपयोगकर्ता पहचान
+यदि आप पहली बार पंजीकरण कर रहे हैं, तो कृपया अपना 6 अंकों का पिन कोड दर्ज करें, फिर # दबाएँ और उसके बाद अपना वार्ड नंबर दर्ज करें।
+यदि आपको अपना वार्ड नंबर ज्ञात नहीं है, तो इस व्हाट्सएप नंबर पर HI संदेश भेजकर अपने पार्षद का चयन करें और आगे की प्रक्रिया जारी रखें।
+पंजीकृत उपयोगकर्ताओं के लिए यह प्रक्रिया स्वतः छोड़ दी जाएगी।
+
+
+चरण 3 – आपातकालीन सेवाएँ
+आपातकालीन SOS सहायता के लिए:
+अग्नि आपातकाल के लिए 1 दबाएँ। आपका कॉल अग्निशमन विभाग से जोड़ा जाएगा।
+चिकित्सा या दुर्घटना संबंधी आपातकाल के लिए 2 दबाएँ। आपका कॉल चिकित्सा आपातकालीन टीम से जोड़ा जाएगा।
+अपने पार्षद से संपर्क करने के लिए 3 दबाएँ।
+(यदि केवल एक ही पार्षद उपलब्ध हैं, तो आपका कॉल सीधे उनसे जोड़ दिया जाएगा।)
+चरण 4 – अपने पार्षद का चयन करें एवं संपर्क करें
+(यदि एक से अधिक पार्षद हों) 
+कृपया सीधे संपर्क के लिए अपने पार्षद का चयन करें।
+
+
+{पार्षद का नाम} के लिए 1 दबाएँ।
+{पार्षद का नाम} के लिए 2 दबाएँ।
+{पार्षद का नाम} के लिए 3 दबाएँ।
+{पार्षद का नाम} के लिए 4 दबाएँ।
+{पार्षद का नाम} के लिए 5 दबाएँ।
+इस मेनू को दोबारा सुनने के लिए 0 दबाएँ।
+यदि कॉल नहीं जुड़ पाता है:
+"कार्यालय इस समय उपलब्ध नहीं है। आपकी शिकायत दर्ज कर ली जाएगी।"
+शिकायत दर्ज करने के लिए 9 दबाएँ।
+
+
+चरण 5 – शिकायत दर्ज करें
+बीप के बाद, कृपया अपनी शिकायत का संक्षिप्त विवरण दें और सहायता के लिए आवश्यक स्थान का पूरा पता या निकटतम पहचान योग्य स्थान बताएं।
+उदाहरण:
+"एम. जी. रोड पर एबीसी स्कूल के पास पानी का रिसाव हो रहा है।"
+
+
+चरण 6 – शिकायत की पुष्टि
+आपकी शिकायत सफलतापूर्वक दर्ज कर ली गई है। हमारी टीम शीघ्र ही आपकी शिकायत पर आवश्यक कार्यवाही करेगी।
+धन्यवाद।
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Smart Address Detection
+If the caller forgets to mention the location:
+"Please tell us the address or nearest landmark where assistance is required."   —-- sms template by pritam

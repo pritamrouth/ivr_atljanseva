@@ -22,6 +22,7 @@ type WardMatch struct {
 	Ward           string
 	NagarsevakID   uuid.UUID
 	NagarsevakName string
+	NagarsevakPhone string
 }
 
 type NagarsevakResponse struct {
@@ -44,6 +45,7 @@ type NagarsevakLookupRequest struct {
 }
 
 type NagarsevakRecord struct {
-	ID   uuid.UUID
-	Name string
+	ID    uuid.UUID
+	Name  string
+	Phone string
 }
