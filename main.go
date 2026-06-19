@@ -50,6 +50,6 @@ func main() {
 		plivoHandler,
 	)
 
-	log.Println("server running on :8080")
-	log.Fatal(router.Run(":8080"))
+	log.Println("server running on :5020")
+	log.Fatal(router.Run(":5020"))
 }

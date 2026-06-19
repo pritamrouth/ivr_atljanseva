@@ -41,6 +41,9 @@ func RegisterRoutes(
 			plivo.POST("/ward-select", plivoHandler.WardSelect)
 			plivo.POST("/nagarsevak-select", plivoHandler.NagarsevakSelect)
 			plivo.POST("/main-menu", plivoHandler.MainMenu)
+			plivo.POST("/sos-menu", plivoHandler.SOSMenu)
+			plivo.POST("/complaint-record", plivoHandler.ComplaintRecord)
+			plivo.POST("/complaint-callback", plivoHandler.ComplaintCallback)
 		}
 	}
 }

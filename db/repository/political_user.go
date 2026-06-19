@@ -30,7 +30,8 @@ func (r *PoliticalUserRepository) FindMatchingWards(
 	SELECT DISTINCT ON (ward)
 		ward,
 		id,
-		full_name
+		full_name,
+		phone
 	FROM political_users
 	WHERE pincode::text = $1
 	  AND ward ILIKE '%' || $2 || '%'
@@ -59,6 +60,7 @@ func (r *PoliticalUserRepository) FindMatchingWards(
 			&m.Ward,
 			&m.NagarsevakID,
 			&m.NagarsevakName,
+			&m.NagarsevakPhone,
 		)
 		if err != nil {
 			return nil, err
@@ -79,7 +81,8 @@ func (r *PoliticalUserRepository) FindNagarsevaks(
 	query := `
 	SELECT
 		id,
-		full_name
+		full_name,
+		phone
 	FROM political_users
 	WHERE pincode::text = $1
 	  AND ward = $2
@@ -97,7 +100,7 @@ func (r *PoliticalUserRepository) FindNagarsevaks(
 
 	for rows.Next() {
 		var rec models.NagarsevakRecord
-		if err := rows.Scan(&rec.ID, &rec.Name); err != nil {
+		if err := rows.Scan(&rec.ID, &rec.Name, &rec.Phone); err != nil {
 			return nil, err
 		}
 		records = append(records, rec)
@@ -114,7 +117,8 @@ func (r *PoliticalUserRepository) FindNagarsevakByID(
 	query := `
 	SELECT
 		id,
-		full_name
+		full_name,
+		phone
 	FROM political_users
 	WHERE id = $1
 	  AND is_active = true
@@ -123,7 +127,7 @@ func (r *PoliticalUserRepository) FindNagarsevakByID(
 
 	var rec models.NagarsevakRecord
 
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&rec.ID, &rec.Name)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&rec.ID, &rec.Name, &rec.Phone)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
