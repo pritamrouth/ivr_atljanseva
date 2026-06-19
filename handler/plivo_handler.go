@@ -117,15 +117,14 @@ func (h *PlivoHandler) Incoming(c *gin.Context) {
 
 	// new user – language selection with pre-recorded audio if available
 	url := h.playURL("welcome", "english")
+	action := h.baseURL + "/ivr/plivo/language?phone=" + phone
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Play(url),
-			plivo.GetDigits(h.baseURL+"/ivr/plivo/language?phone="+phone, 1, 10),
+			plivo.GetDigits(action, 1, 10, plivo.Play(url)),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("Welcome to Atal Janseva Citizen Service. Marathi saaathi 1 daba. For English, press 2. Hindi ke liye 3 dabaie.", "english"),
-			plivo.GetDigits(h.baseURL+"/ivr/plivo/language?phone="+phone, 1, 10),
+			plivo.GetDigits(action, 1, 10, plivo.Speak("Welcome to Atal Janseva Citizen Service. Marathi saaathi 1 daba. For English, press 2. Hindi ke liye 3 dabaie.", "english")),
 		))
 	}
 }
@@ -139,43 +138,61 @@ func (h *PlivoHandler) LanguageSelect(c *gin.Context) {
 
 	lang := resolveLanguage(digits)
 
-	action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang
+	action := h.baseURL + "/ivr/plivo/pincode-input?phone=" + phone + "&language=" + lang
 
 	url := h.playURL("ward_input", lang)
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Play(url),
-			plivo.GetDigits(action, 20, 15),
+			plivo.GetDigits(action, 6, 15, plivo.Play(url)),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("Please enter your 6 digit pincode followed by hash and your ward number. For example, 4 0 1 1 0 7 hash 1 0.", lang),
-			plivo.GetDigits(action, 20, 15),
+			plivo.GetDigits(action, 6, 15, plivo.Speak("Please enter your 6 digit pincode.", lang)),
 		))
 	}
 }
 
-// --------------- step 2: ward input (pincode#ward) ---------------
+// --------------- step 1b: pincode input ---------------
+
+// POST /ivr/plivo/pincode-input
+func (h *PlivoHandler) PincodeInput(c *gin.Context) {
+	phone := c.Query("phone")
+	lang := c.Query("language")
+	digits := c.PostForm("Digits")
+
+	if digits == "" || len(digits) < 6 {
+		action := h.baseURL + "/ivr/plivo/pincode-input?phone=" + phone + "&language=" + lang
+		c.String(http.StatusOK, plivo.Response(
+			plivo.GetDigits(action, 6, 15, plivo.Speak("Invalid pincode. Please enter your 6 digit pincode.", lang)),
+		))
+		return
+	}
+
+	pincode := digits[:6]
+
+	action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang + "&pincode=" + pincode
+
+	c.String(http.StatusOK, plivo.Response(
+		plivo.GetDigits(action, 10, 15, plivo.Speak("Now enter your ward number and press hash.", lang)),
+	))
+}
+
+// --------------- step 2: ward input (pincode from query, ward from digits) ---------------
 
 // POST /ivr/plivo/ward-input
 func (h *PlivoHandler) WardInput(c *gin.Context) {
 	phone := c.Query("phone")
 	lang := c.Query("language")
-	digits := c.PostForm("Digits")
+	pincode := c.Query("pincode")
+	wardInput := c.PostForm("Digits")
 	retryStr := c.Query("retry")
 
-	if digits == "" {
-		h.wardInputRetry(c, phone, lang, retryStr)
+	if wardInput == "" {
+		h.wardInputRetry(c, phone, lang, pincode, retryStr)
 		return
 	}
 
 	retry, _ := strconv.Atoi(retryStr)
-
-	pincode, wardInput := splitPincodeWard(digits)
-	if pincode == "" || wardInput == "" {
-		h.wardInputRetry(c, phone, lang, strconv.Itoa(retry+1))
-		return
-	}
 
 	matches, err := h.politicalRepo.FindMatchingWards(c.Request.Context(), pincode, wardInput)
 	if err != nil {
@@ -189,7 +206,7 @@ func (h *PlivoHandler) WardInput(c *gin.Context) {
 
 	switch {
 	case len(matches) == 0:
-		h.wardInputRetry(c, phone, lang, strconv.Itoa(retry+1))
+		h.wardInputRetry(c, phone, lang, pincode, strconv.Itoa(retry+1))
 
 	case len(matches) == 1:
 		selectedWard := matches[0].Ward
@@ -244,10 +261,10 @@ func (h *PlivoHandler) WardSelect(c *gin.Context) {
 
 	wards := strings.Split(wardsRaw, ",")
 	if idx < 0 || idx >= len(wards) {
-		action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang + "&retry="
+		action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang + "&pincode=" + pincode + "&retry="
 		c.String(http.StatusOK, plivo.Response(
 			plivo.Speak("Invalid selection. Please try again.", lang),
-			plivo.GetDigits(action, 20, 15),
+			plivo.GetDigits(action, 10, 15),
 		))
 		return
 	}
@@ -466,8 +483,7 @@ func (h *PlivoHandler) returnMainMenu(c *gin.Context, phone, lang, pincode, ward
 		"&nagarsevak_phone=" + nsPhone
 
 	c.String(http.StatusOK, plivo.Response(
-		plivo.Speak("Welcome back! Your corporator "+nsName+" is connected. Press 1 for SOS, Press 2 to file a complaint, Press 3 to connect to your corporator.", lang),
-		plivo.GetDigits(action, 1, 10),
+		plivo.GetDigits(action, 1, 10, plivo.Speak("Welcome back! Your corporator "+nsName+" is connected. Press 1 for SOS, Press 2 to file a complaint, Press 3 to connect to your corporator.", lang)),
 	))
 }
 
@@ -480,13 +496,11 @@ func (h *PlivoHandler) returnSOSMenu(c *gin.Context, phone, lang, pincode, ward,
 	url := h.playURL("sos_menu", lang)
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Play(url),
-			plivo.GetDigits(action, 1, 10),
+			plivo.GetDigits(action, 1, 10, plivo.Play(url)),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("Emergency SOS. Press 1 for Fire Emergency. Press 2 for Medical or Accident Emergency. Press 3 to connect with your Corporator. Press 0 to repeat.", lang),
-			plivo.GetDigits(action, 1, 10),
+			plivo.GetDigits(action, 1, 10, plivo.Speak("Emergency SOS. Press 1 for Fire Emergency. Press 2 for Medical or Accident Emergency. Press 3 to connect with your Corporator. Press 0 to repeat.", lang)),
 		))
 	}
 }
@@ -540,25 +554,23 @@ func (h *PlivoHandler) corporatorConnect(c *gin.Context, phone, lang, pincode, w
 	))
 }
 
-func (h *PlivoHandler) wardInputRetry(c *gin.Context, phone, lang, retryStr string) {
+func (h *PlivoHandler) wardInputRetry(c *gin.Context, phone, lang, pincode, retryStr string) {
 	retry, _ := strconv.Atoi(retryStr)
 	if retry >= h.maxRetries {
 		h.returnWhatsAppPrompt(c, lang)
 		return
 	}
 
-	action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang + "&retry=" + strconv.Itoa(retry)
+	action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang + "&pincode=" + pincode + "&retry=" + strconv.Itoa(retry+1)
 
 	url := h.playURL("ward_input", lang)
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Play(url),
-			plivo.GetDigits(action, 20, 15),
+			plivo.GetDigits(action, 10, 15, plivo.Play(url)),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("We could not find a matching ward. Please try again. Enter your 6 digit pincode followed by hash and your ward number.", lang),
-			plivo.GetDigits(action, 20, 15),
+			plivo.GetDigits(action, 10, 15, plivo.Speak("We could not find a matching ward. Please try again. Enter your ward number.", lang)),
 		))
 	}
 }
@@ -617,17 +629,6 @@ func resolveLanguage(digits string) string {
 	default:
 		return "english"
 	}
-}
-
-func splitPincodeWard(s string) (string, string) {
-	s = strings.TrimSpace(s)
-	if idx := strings.Index(s, "#"); idx > 0 {
-		return strings.TrimSpace(s[:idx]), strings.TrimSpace(s[idx+1:])
-	}
-	if len(s) >= 6 {
-		return s[:6], strings.TrimSpace(s[6:])
-	}
-	return s, ""
 }
 
 func normalizePhone(phone string) string {

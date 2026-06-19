@@ -37,6 +37,7 @@ func RegisterRoutes(
 		{
 			plivo.POST("/incoming", plivoHandler.Incoming)
 			plivo.POST("/language", plivoHandler.LanguageSelect)
+			plivo.POST("/pincode-input", plivoHandler.PincodeInput)
 			plivo.POST("/ward-input", plivoHandler.WardInput)
 			plivo.POST("/ward-select", plivoHandler.WardSelect)
 			plivo.POST("/nagarsevak-select", plivoHandler.NagarsevakSelect)
