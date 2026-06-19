@@ -120,13 +120,11 @@ func (h *PlivoHandler) Incoming(c *gin.Context) {
 	url := h.playURL("welcome", "english")
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Play(url),
-			plivo.GetDigits(action, 1, 10),
+			plivo.GetDigits(action, 1, 10, plivo.Play(url)),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("Welcome to Atal Janseva Citizen Service. Marathi saaathi 1 daba. For English, press 2. Hindi ke liye 3 dabaie.", "english"),
-			plivo.GetDigits(action, 1, 10),
+			plivo.GetDigits(action, 1, 10, plivo.Speak("Welcome to Atal Janseva Citizen Service. Marathi saaathi 1 daba. For English, press 2. Hindi ke liye 3 dabaie.", "english")),
 		))
 	}
 }
@@ -145,16 +143,16 @@ func (h *PlivoHandler) LanguageSelect(c *gin.Context) {
 	url := h.playURL("ward_input", lang)
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 6, 15, plivo.Play(url)),
+			plivo.GetDigitsEx(action, 12, 15, "", 4, plivo.Play(url)),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 6, 15, plivo.Speak("Please enter your 6 digit pincode.", lang)),
+			plivo.GetDigitsEx(action, 12, 15, "", 4, plivo.Speak("Enter your 6-digit pincode, then press hash, then your ward number.", lang)),
 		))
 	}
 }
 
-// --------------- step 1b: pincode input ---------------
+// --------------- step 1b: pincode + ward input (combined "400601#21" format) ---------------
 
 // POST /ivr/plivo/pincode-input
 func (h *PlivoHandler) PincodeInput(c *gin.Context) {
@@ -162,18 +160,28 @@ func (h *PlivoHandler) PincodeInput(c *gin.Context) {
 	lang := c.Query("language")
 	digits := c.PostForm("Digits")
 
-	if digits == "" || len(digits) < 6 {
+	parts := strings.SplitN(digits, "#", 2)
+	pincode := strings.TrimSpace(parts[0])
+
+	if pincode == "" || len(pincode) < 6 {
 		action := h.baseURL + "/ivr/plivo/pincode-input?phone=" + phone + "&language=" + lang
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 6, 15, plivo.Speak("Invalid pincode. Please enter your 6 digit pincode.", lang)),
+			plivo.GetDigitsEx(action, 12, 15, "", 4,
+				plivo.Speak("Invalid input. Enter your 6-digit pincode, hash, then ward number.", lang),
+			),
 		))
 		return
 	}
 
-	pincode := digits[:6]
+	pincode = pincode[:6]
+
+	if len(parts) > 1 && strings.TrimSpace(parts[1]) != "" {
+		wardInput := strings.TrimSpace(parts[1])
+		h.resolveWardAndProceed(c, phone, lang, pincode, wardInput, 0)
+		return
+	}
 
 	action := h.baseURL + "/ivr/plivo/ward-input?phone=" + phone + "&language=" + lang + "&pincode=" + pincode
-
 	c.String(http.StatusOK, plivo.Response(
 		plivo.GetDigits(action, 10, 15, plivo.Speak("Now enter your ward number and press hash.", lang)),
 	))
@@ -195,57 +203,7 @@ func (h *PlivoHandler) WardInput(c *gin.Context) {
 	}
 
 	retry, _ := strconv.Atoi(retryStr)
-
-	matches, err := h.politicalRepo.FindMatchingWards(c.Request.Context(), pincode, wardInput)
-	if err != nil {
-		log.Printf("ward resolve error: %v", err)
-		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("System error. Please try again later.", lang),
-			plivo.Hangup(),
-		))
-		return
-	}
-
-	switch {
-	case len(matches) == 0:
-		h.wardInputRetry(c, phone, lang, pincode, strconv.Itoa(retry+1))
-
-	case len(matches) == 1:
-		selectedWard := matches[0].Ward
-		nagarsevaks, err := h.politicalRepo.FindNagarsevaks(c.Request.Context(), pincode, selectedWard)
-		if err != nil {
-			log.Printf("nagarsevak lookup error: %v", err)
-			c.String(http.StatusOK, plivo.Response(
-				plivo.Speak("System error. Please try again later.", lang),
-				plivo.Hangup(),
-			))
-			return
-		}
-		switch {
-		case len(nagarsevaks) == 0:
-			h.returnWhatsAppPrompt(c, lang)
-
-		case len(nagarsevaks) == 1:
-			ns := nagarsevaks[0]
-			err := h.citizenRepo.UpsertCitizen(c.Request.Context(), phone, lang, pincode, selectedWard, ns.ID)
-			if err != nil {
-				log.Printf("auto-save error: %v", err)
-			}
-			h.returnMainMenu(c, phone, lang, pincode, selectedWard, ns.ID.String(), ns.Name, ns.Phone)
-
-		case len(nagarsevaks) <= 5:
-			h.returnNagarsevakMenu(c, phone, lang, pincode, selectedWard, nagarsevaks)
-
-		default:
-			h.returnWhatsAppPrompt(c, lang)
-		}
-
-	case len(matches) <= 4:
-		h.returnWardMenu(c, phone, lang, pincode, matches)
-
-	default:
-		h.returnWhatsAppPrompt(c, lang)
-	}
+	h.resolveWardAndProceed(c, phone, lang, pincode, wardInput, retry)
 }
 
 // --------------- step 2b: ward select from list ---------------
@@ -474,6 +432,56 @@ func (h *PlivoHandler) ComplaintCallback(c *gin.Context) {
 
 // --------------- internal response builders ---------------
 
+func (h *PlivoHandler) resolveWardAndProceed(c *gin.Context, phone, lang, pincode, wardInput string, retry int) {
+	matches, err := h.politicalRepo.FindMatchingWards(c.Request.Context(), pincode, wardInput)
+	if err != nil {
+		log.Printf("ward resolve error: %v", err)
+		c.String(http.StatusOK, plivo.Response(
+			plivo.Speak("System error. Please try again later.", lang),
+			plivo.Hangup(),
+		))
+		return
+	}
+
+	switch {
+	case len(matches) == 0:
+		h.wardInputRetry(c, phone, lang, pincode, strconv.Itoa(retry+1))
+
+	case len(matches) == 1:
+		selectedWard := matches[0].Ward
+		nagarsevaks, err := h.politicalRepo.FindNagarsevaks(c.Request.Context(), pincode, selectedWard)
+		if err != nil {
+			log.Printf("nagarsevak lookup error: %v", err)
+			c.String(http.StatusOK, plivo.Response(
+				plivo.Speak("System error. Please try again later.", lang),
+				plivo.Hangup(),
+			))
+			return
+		}
+		switch {
+		case len(nagarsevaks) == 0:
+			h.returnWhatsAppPrompt(c, lang)
+		case len(nagarsevaks) == 1:
+			ns := nagarsevaks[0]
+			err := h.citizenRepo.UpsertCitizen(c.Request.Context(), phone, lang, pincode, selectedWard, ns.ID)
+			if err != nil {
+				log.Printf("auto-save error: %v", err)
+			}
+			h.returnMainMenu(c, phone, lang, pincode, selectedWard, ns.ID.String(), ns.Name, ns.Phone)
+		case len(nagarsevaks) <= 5:
+			h.returnNagarsevakMenu(c, phone, lang, pincode, selectedWard, nagarsevaks)
+		default:
+			h.returnWhatsAppPrompt(c, lang)
+		}
+
+	case len(matches) <= 4:
+		h.returnWardMenu(c, phone, lang, pincode, matches)
+
+	default:
+		h.returnWhatsAppPrompt(c, lang)
+	}
+}
+
 func (h *PlivoHandler) returnMainMenu(c *gin.Context, phone, lang, pincode, ward, nsID, nsName, nsPhone string) {
 	if nsName == "" {
 		nsName = "your nagarsevak"
@@ -589,8 +597,7 @@ func (h *PlivoHandler) returnWardMenu(c *gin.Context, phone, lang, pincode strin
 		"&pincode=" + pincode + "&wards=" + strings.Join(wards, ",")
 
 	c.String(http.StatusOK, plivo.Response(
-		plivo.Speak("Multiple wards found. "+strings.Join(ttsParts, ". ")+".", lang),
-		plivo.GetDigits(action, 1, 10),
+		plivo.GetDigits(action, 1, 10, plivo.Speak("Multiple wards found. "+strings.Join(ttsParts, ". ")+".", lang)),
 	))
 }
 
@@ -606,8 +613,7 @@ func (h *PlivoHandler) returnNagarsevakMenu(c *gin.Context, phone, lang, pincode
 		"&pincode=" + pincode + "&ward=" + ward + "&ids=" + strings.Join(ids, ",")
 
 	c.String(http.StatusOK, plivo.Response(
-		plivo.Speak("Multiple corporators found. "+strings.Join(ttsParts, ". ")+".", lang),
-		plivo.GetDigits(action, 1, 10),
+		plivo.GetDigits(action, 1, 10, plivo.Speak("Multiple corporators found. "+strings.Join(ttsParts, ". ")+".", lang)),
 	))
 }
 

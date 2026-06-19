@@ -35,6 +35,14 @@ func GetDigits(action string, numDigits, timeout int, children ...string) string
 	)
 }
 
+func GetDigitsEx(action string, numDigits, timeout int, finishOnKey string, digitTimeout int, children ...string) string {
+	inner := strings.Join(children, "")
+	return fmt.Sprintf(
+		`<GetDigits action="%s" method="POST" numDigits="%d" timeout="%d" finishOnKey="%s" digitTimeout="%d">%s</GetDigits>`,
+		escape(action), numDigits, timeout, escape(finishOnKey), digitTimeout, inner,
+	)
+}
+
 func Hangup() string {
 	return `<Hangup/>`
 }
