@@ -73,13 +73,13 @@ func AudioURL(baseURL, lang, file string) string {
 func languageCode(lang string) string {
 	switch strings.ToLower(lang) {
 	case "english":
-		return "en-US"
+		return "en-IN"
 	case "hindi":
 		return "hi-IN"
 	case "marathi":
 		return "mr-IN"
 	default:
-		return "en-US"
+		return "en-IN"
 	}
 }
 

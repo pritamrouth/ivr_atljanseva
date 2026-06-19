@@ -1,8 +1,8 @@
 ﻿AtalJanseva AI IVR Flow English(Optimized)
 Step 1 – Welcome & Language Selection
 Welcome to AtalJanseva Citizen Service.
-मराठीसाठी 1 दाबा.
-For English, press 2.
+For English, press 1.
+मराठीसाठी 2 दाबा.
 हिंदी के लिए 3 दबाइए.
 Step 2 – User Identification
 

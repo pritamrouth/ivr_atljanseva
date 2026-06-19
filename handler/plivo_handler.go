@@ -115,16 +115,18 @@ func (h *PlivoHandler) Incoming(c *gin.Context) {
 		return
 	}
 
-	// new user – language selection with pre-recorded audio if available
-	url := h.playURL("welcome", "english")
+	// new user – language selection
 	action := h.baseURL + "/ivr/plivo/language?phone=" + phone
+	url := h.playURL("welcome", "english")
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 1, 10, plivo.Play(url)),
+			plivo.Play(url),
+			plivo.GetDigits(action, 1, 10),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 1, 10, plivo.Speak("Welcome to Atal Janseva Citizen Service. Marathi saaathi 1 daba. For English, press 2. Hindi ke liye 3 dabaie.", "english")),
+			plivo.Speak("Welcome to Atal Janseva Citizen Service. Marathi saaathi 1 daba. For English, press 2. Hindi ke liye 3 dabaie.", "english"),
+			plivo.GetDigits(action, 1, 10),
 		))
 	}
 }
