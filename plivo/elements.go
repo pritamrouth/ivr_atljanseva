@@ -55,6 +55,13 @@ func Dial(number string) string {
 	return fmt.Sprintf(`<Dial callerId="%s">%s</Dial>`, escape(number), escape(number))
 }
 
+func DialWithAction(number, actionURL string) string {
+	return fmt.Sprintf(
+		`<Dial action="%s" method="POST" callerId="%s">%s</Dial>`,
+		escape(actionURL), escape(number), escape(number),
+	)
+}
+
 func Record(action string, maxSeconds int, finishOnKey string) string {
 	return fmt.Sprintf(
 		`<Record action="%s" method="POST" maxLength="%d" finishOnKey="%s" />`,

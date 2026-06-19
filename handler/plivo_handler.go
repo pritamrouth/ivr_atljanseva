@@ -312,7 +312,7 @@ func (h *PlivoHandler) NagarsevakSelect(c *gin.Context) {
 	h.returnMainMenu(c, phone, lang, pincode, ward, ns.ID.String(), ns.Name, ns.Phone)
 }
 
-// --------------- step 3: main menu (returning user) ---------------
+// --------------- step 3: unified SOS / main menu (same for everyone) ---------------
 
 // POST /ivr/plivo/main-menu
 func (h *PlivoHandler) MainMenu(c *gin.Context) {
@@ -327,46 +327,13 @@ func (h *PlivoHandler) MainMenu(c *gin.Context) {
 
 	switch digits {
 	case "1":
-		// SOS sub-menu
-		h.returnSOSMenu(c, phone, lang, pincode, ward, nsID, nsName, nsPhone)
+		h.sosConnect(c, lang, "Fire Emergency")
 	case "2":
-		// Record complaint – produce XML inline
-		h.complaintRecordXML(c, phone, lang, pincode, ward, nsID, nsName, nsPhone)
+		h.sosConnect(c, lang, "Medical Emergency")
 	case "3":
-		// Connect to corporator
 		h.corporatorConnect(c, phone, lang, pincode, ward, nsID, nsName, nsPhone)
 	default:
 		h.returnMainMenu(c, phone, lang, pincode, ward, nsID, nsName, nsPhone)
-	}
-}
-
-// --------------- step 3a: SOS sub-menu ---------------
-
-// POST /ivr/plivo/sos-menu
-func (h *PlivoHandler) SOSMenu(c *gin.Context) {
-	phone := c.Query("phone")
-	lang := c.Query("language")
-	pincode := c.Query("pincode")
-	ward := c.Query("ward")
-	nsID := c.Query("nagarsevak_id")
-	nsName := c.Query("nagarsevak_name")
-	nsPhone := c.Query("nagarsevak_phone")
-	digits := c.PostForm("Digits")
-
-	switch digits {
-	case "1":
-		// Fire Emergency – connect to fire number
-		h.sosConnect(c, lang, "Fire Emergency")
-	case "2":
-		// Medical / Accident Emergency
-		h.sosConnect(c, lang, "Medical Emergency")
-	case "3":
-		// Connect to Corporator
-		h.corporatorConnect(c, phone, lang, pincode, ward, nsID, nsName, nsPhone)
-	case "0":
-		h.returnSOSMenu(c, phone, lang, pincode, ward, nsID, nsName, nsPhone)
-	default:
-		h.returnSOSMenu(c, phone, lang, pincode, ward, nsID, nsName, nsPhone)
 	}
 }
 
@@ -428,6 +395,46 @@ func (h *PlivoHandler) ComplaintCallback(c *gin.Context) {
 			plivo.Hangup(),
 		))
 	}
+}
+
+// --------------- dial status callback ---------------
+
+// POST /ivr/plivo/dial-status
+func (h *PlivoHandler) DialStatus(c *gin.Context) {
+	phone := c.Query("phone")
+	lang := c.Query("language")
+	pincode := c.Query("pincode")
+	ward := c.Query("ward")
+	nsID := c.Query("nagarsevak_id")
+	nsName := c.Query("nagarsevak_name")
+	nsPhone := c.Query("nagarsevak_phone")
+
+	dialStatus := c.PostForm("DialStatus")
+
+	if dialStatus != "completed" {
+		h.returnComplaintOffer(c, phone, lang, pincode, ward, nsID, nsName, nsPhone)
+		return
+	}
+
+	c.String(http.StatusOK, plivo.Response(
+		plivo.Speak("Thank you for using Atal Janseva. Goodbye.", lang),
+		plivo.Hangup(),
+	))
+}
+
+func (h *PlivoHandler) returnComplaintOffer(c *gin.Context, phone, lang, pincode, ward, nsID, nsName, nsPhone string) {
+	action := h.baseURL + "/ivr/plivo/complaint-record?phone=" + phone +
+		"&language=" + lang +
+		"&pincode=" + pincode +
+		"&ward=" + ward +
+		"&nagarsevak_id=" + nsID +
+		"&nagarsevak_name=" + nsName +
+		"&nagarsevak_phone=" + nsPhone
+
+	c.String(http.StatusOK, plivo.Response(
+		plivo.Speak("The office is currently unavailable. Your complaint will be recorded.", lang),
+		plivo.GetDigits(action, 1, 10, plivo.Speak("To register a complaint, press 9.", lang)),
+	))
 }
 
 // --------------- internal response builders ---------------
@@ -492,25 +499,16 @@ func (h *PlivoHandler) returnMainMenu(c *gin.Context, phone, lang, pincode, ward
 		"&nagarsevak_id=" + nsID + "&nagarsevak_name=" + nsName +
 		"&nagarsevak_phone=" + nsPhone
 
-	c.String(http.StatusOK, plivo.Response(
-		plivo.GetDigits(action, 1, 10, plivo.Speak("Welcome back! Your corporator "+nsName+" is connected. Press 1 for SOS, Press 2 to file a complaint, Press 3 to connect to your corporator.", lang)),
-	))
-}
-
-func (h *PlivoHandler) returnSOSMenu(c *gin.Context, phone, lang, pincode, ward, nsID, nsName, nsPhone string) {
-	action := h.baseURL + "/ivr/plivo/sos-menu?phone=" + phone + "&language=" + lang +
-		"&pincode=" + pincode + "&ward=" + ward +
-		"&nagarsevak_id=" + nsID + "&nagarsevak_name=" + nsName +
-		"&nagarsevak_phone=" + nsPhone
-
 	url := h.playURL("sos_menu", lang)
 	if url != "" {
 		c.String(http.StatusOK, plivo.Response(
+			plivo.Speak("NAGARSEVAK "+nsName+" IS CONNECTED.", lang),
 			plivo.GetDigits(action, 1, 10, plivo.Play(url)),
 		))
 	} else {
 		c.String(http.StatusOK, plivo.Response(
-			plivo.GetDigits(action, 1, 10, plivo.Speak("Emergency SOS. Press 1 for Fire Emergency. Press 2 for Medical or Accident Emergency. Press 3 to connect with your Corporator. Press 0 to repeat.", lang)),
+			plivo.Speak("NAGARSEVAK "+nsName+" IS CONNECTED.", lang),
+			plivo.GetDigits(action, 1, 10, plivo.Speak("For Emergency SOS Assistance: Press 1 for Fire Emergency. Press 2 for Medical or Accident Emergency. Press 3 to connect with your Corporator.", lang)),
 		))
 	}
 }
@@ -551,16 +549,21 @@ func (h *PlivoHandler) corporatorConnect(c *gin.Context, phone, lang, pincode, w
 	}
 
 	if nsPhone == "" {
-		c.String(http.StatusOK, plivo.Response(
-			plivo.Speak("We could not connect you to "+nsName+". Please try again later.", lang),
-			plivo.Hangup(),
-		))
+		h.returnComplaintOffer(c, phone, lang, pincode, ward, nsID, nsName, "")
 		return
 	}
 
+	dialAction := h.baseURL + "/ivr/plivo/dial-status?phone=" + phone +
+		"&language=" + lang +
+		"&pincode=" + pincode +
+		"&ward=" + ward +
+		"&nagarsevak_id=" + nsID +
+		"&nagarsevak_name=" + nsName +
+		"&nagarsevak_phone=" + nsPhone
+
 	c.String(http.StatusOK, plivo.Response(
 		plivo.Speak("Connecting you to "+nsName+". Please hold.", lang),
-		plivo.Dial(nsPhone),
+		plivo.DialWithAction(nsPhone, dialAction),
 	))
 }
 
