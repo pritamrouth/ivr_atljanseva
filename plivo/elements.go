@@ -86,13 +86,13 @@ func languageCode(lang string) string {
 func langCodeShort(lang string) string {
 	switch strings.ToLower(lang) {
 	case "english":
-		return "en"
+		return "audio-eng"
 	case "hindi":
-		return "hi"
+		return "audio-hindi"
 	case "marathi":
-		return "mr"
+		return "audio-mr"
 	default:
-		return "en"
+		return "audio-eng"
 	}
 }
 
