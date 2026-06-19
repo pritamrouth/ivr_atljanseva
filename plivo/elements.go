@@ -35,18 +35,6 @@ func GetDigits(action string, numDigits, timeout int, children ...string) string
 	)
 }
 
-func GetInput(action string, numDigits int, finishOnKey string, children ...string) string {
-	inner := strings.Join(children, "")
-	return fmt.Sprintf(
-		`<GetInput action="%s" method="POST" inputType="dtmf" numDigits="%d" digitEndTimeout="5" finishOnKey="%s" redirect="true">%s</GetInput>`,
-		escape(action), numDigits, escape(finishOnKey), inner,
-	)
-}
-
-func NoInput(lang string) string {
-	return Speak("Sorry, I did not catch that. Please try again.", lang)
-}
-
 func Hangup() string {
 	return `<Hangup/>`
 }
