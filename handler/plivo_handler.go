@@ -634,9 +634,9 @@ func resolveLanguage(digits string) string {
 	case "1":
 		return "english"
 	case "2":
-		return "hindi"
-	case "3":
 		return "marathi"
+	case "3":
+		return "hindi"
 	default:
 		return "english"
 	}
